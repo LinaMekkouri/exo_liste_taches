@@ -7,6 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface TacheRepository extends JpaRepository <Tache, Integer>{
-    List<Tache>findByProjet(Projet projet);
+    List<Tache>findByProjet(long projectId);
+    List<Tache> findByStatut(String statut);
+    List<Tache> findByPriorite(String priorite);
+
 
 }
