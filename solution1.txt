@@ -1,0 +1,492 @@
+**************************************Arborescence du projet**************************************
+src/
+└── main/
+    └── java/
+        └── com/
+            └── example/
+                └── exo1/
+                    ├── controller/
+                    │   ├── ProjetController.java
+                    │   └── TacheController.java
+                    ├── model/
+                    │   ├── Priorite.java
+                    │   ├── Projet.java
+                    │   ├── Statut.java
+                    │   └── Tache.java
+                    ├── repository/
+                    │   ├── ProjetRepository.java
+                    │   └── TacheRepository.java
+                    ├── service/
+                    │   ├── ProjetService.java
+                    │   └── TacheService.java
+                    └── Exo1Application.java
+
+
+***********************************Les modèles et les énumérations************************************
++Projet:
+
+package com.example.exo1.model;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
+import java.util.List;
+@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@Entity
+@Table(name="projet")
+public class Projet {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    @NotBlank(message = "Le titre du projet ne peut pas être vide.")
+    @Size(max = 255, message = "Le nom de projet ne doit pas dépasser 255 caractères.")
+    private String nom;
+    @NotBlank(message = "La description du projet ne peut pas être vide.")
+    private String description;
+    private LocalDateTime dateCreation ;
+    private String statut;
+    @OneToMany(mappedBy = "projet")
+    private List<Tache> taches;
+
+    public Projet(int id, String nom, String description, String statut, List<Tache> taches) {
+        this.id = id;
+        this.nom = nom;
+        this.description = description;
+        this.statut = statut;
+        this.taches = taches;
+        this.dateCreation = LocalDateTime.now();
+
+    }
+}
+
+/*Dans cette classe j'ai défini les anotation nécessaires pour la création de la table dans la base de données: (@Entity  @Table(name="projet")
+  j'ai aussi les anontations : @Getter, @Setter et @NoArgsConstructor pour générer automatiquement les getters et les setters et le conscruteur sans arguments 
+  @Id, @GeneratedValue(strategy = GenerationType.IDENTITY): pour génère les ids automatiquement.
+  @NotBlank(message = "Le titre du projet ne peut pas être vide."),@Size: pour effectuer les vérifications nécessaires
+  @OneToMany(mappedBy = "projet"): un seul projet contient plusieurs taches  
+  ensuite j'ai définis le constructeur, et pour la date de création elle sera génerer automatiquement au moment de la création du projet
+*/
+
+
++Tache:
+
+
+package com.example.exo1.model;
+import jakarta.persistence.*;
+import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import jdk.jfr.DataAmount;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Data
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+
+@Table(name="tache")
+public class Tache {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    private int id;
+    @NotBlank(message = "Le titre de la tâche ne peut pas être vide.")
+    @Size(max = 255, message = "Le titre de la tâche ne doit pas dépasser 255 caractères.")
+    private String titre;
+    @NotBlank(message = "La description de la tâche ne peut pas être vide.")
+    private String description;
+    @Enumerated(EnumType.STRING)
+    private Statut statut;
+    @Enumerated(EnumType.STRING)
+    private Priorite priorite;
+    private LocalDateTime dateCreation;
+    private LocalDate dateEcheance;
+    @ManyToOne
+    @JoinColumn(name="projetId", nullable = false)
+    private Projet projet;
+
+    public Tache(int id, String titre, String description, Statut statut, Priorite priorite, LocalDate dateEcheance, Projet projet) {
+        this.id = id;
+        this.titre = titre;
+        this.description = description;
+        this.statut = statut;
+        this.priorite = priorite;
+        this.dateEcheance = dateEcheance;
+        this.projet = projet;
+        this.dateCreation = LocalDateTime.now();
+
+    }
+}
+
+
+/*Dans cette classe j'ai défini les anotation nécessaires pour la création de la table dans la base de données: (@Entity  @Table(name="tache")
+  j'ai aussi les anontations : @Getter, @Setter et @NoArgsConstructor pour générer automatiquement les getters et les setters et le conscruteur sans arguments 
+  @Id, @GeneratedValue(strategy = GenerationType.IDENTITY): pour génère les ids automatiquement.
+  @NotBlank(message = "Le titre de la tâche ne peut pas être vide."),@Size: pour effectuer les vérifications nécessaires
+  @JoinColumn(name="projetId", nullable = false): pour lier les deux classes par un clé étrangère 
+  ensuite j'ai définis le constructeur, et pour la date de création elle sera génerer automatiquement au moment de la création de la tache
+  @Enumerated: c'est pour déclarer des variables de type énumeration
+*/
+
++Statut
+package com.example.exo1.model;
+
+public enum Statut {
+    ÀFAIRE,
+    ENCOURS,
+    TERMINÉE
+}
+
++Priorite
+package com.example.exo1.model;
+
+public enum Priorite {
+    BASSE,
+    MOYENNE,
+    HAUTE
+}
+***********************************Les repositories****************************************
++ProjetRepository:
+
+package com.example.exo1.repository;
+
+import com.example.exo1.model.Projet;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ProjetRepository extends JpaRepository<Projet, Integer> {
+
+}
+
+on a pas utiliser des méthode que ceux offerts par defaut
+
+
++ TacheRepository:
+
+
+package com.example.exo1.repository;
+
+import com.example.exo1.model.Projet;
+import com.example.exo1.model.Tache;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface TacheRepository extends JpaRepository <Tache, Integer>{
+    List<Tache>findByProjet(long projectId);
+    List<Tache> findByStatut(String statut);
+    List<Tache> findByPriorite(String priorite);
+    Page<Tache> findByProjetId(long projetId, Pageable pageable);
+
+
+}
+
+/*
+1-findByProjet: c'est une méthode qui sert à trouver les taches d'un projet
+2- findByStatut, findByPriorite: c'est pour le filtrage 
+3-findByProjetId: meme chose que findByProjet mais avec pagination
+*/
+
+***********************************Les services******************************************
++ProjetService:
+
+
+package com.example.exo1.service;
+
+import com.example.exo1.model.Projet;
+import com.example.exo1.repository.ProjetRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class ProjetService {
+
+    @Autowired
+    private ProjetRepository projetRepository;
+
+    public List<Projet> getAllProjets() {
+        return projetRepository.findAll();
+    }
+
+    public Optional<Projet> getProjetById(int id) {
+        return projetRepository.findById(id);
+    }
+
+    public Projet addProjet(Projet projet) {
+        projet.setDateCreation(LocalDateTime.now());
+        return projetRepository.save(projet);
+    }
+
+
+    public Optional<Projet> updateProjet(int id, Projet projetDetails) {
+        return projetRepository.findById(id).map(existingProjet -> {
+            existingProjet.setNom(projetDetails.getNom());
+            existingProjet.setDescription(projetDetails.getDescription());
+            existingProjet.setStatut(projetDetails.getStatut());
+            return projetRepository.save(existingProjet);
+        });
+    }
+
+    public void deleteProjet(int id) {
+        projetRepository.deleteById(id);
+    }
+}
+
+/* 
+1- j'ai commencer par injecter ProjetRepository par @Autowired
+2- j'ai créer des méthodes pour returner tout les projets :getAllProjets
+3- j'ai créer aussi une méthode pour retourner le projet par id :getProjetById
+4- j'ai créer une méthode pour créer un nouveau projet : addProjet
+5- j'ai aussi créer une méthode pour modifier le projet(Nom,Description,Statut) : updateProjet
+6- j'ai aussi créer une methode pour supprimer un projet: deleteProjet
+*/
+
++ProjetService:
+
+
+package com.example.exo1.service;
+
+import com.example.exo1.model.Projet;
+import com.example.exo1.model.Tache;
+import com.example.exo1.repository.ProjetRepository;
+import com.example.exo1.repository.TacheRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class TacheService {
+
+    @Autowired
+    private TacheRepository tacheRepository;
+    @Autowired
+    private ProjetRepository projetRepository;
+
+    public Optional<Tache> getTacheById(int id) {
+        return tacheRepository.findById(id);
+    }
+
+    public List<Tache> getTachesByProjet(long projetId) {
+        return tacheRepository.findByProjet(projetId);
+    }
+
+    public Page<Tache> getTachesByProjetPaged(long projetId, Pageable pageable) {
+        return tacheRepository.findByProjetId(projetId, pageable);
+    }
+
+    public Optional<Tache> updateTache(int id, Tache updatedTache) {
+        return tacheRepository.findById(id).map(existingTache -> {
+            existingTache.setTitre(updatedTache.getTitre());
+            existingTache.setDescription(updatedTache.getDescription());
+            existingTache.setStatut(updatedTache.getStatut());
+            return tacheRepository.save(existingTache);
+        });
+    }
+
+    public void deleteTache(int id) {
+        tacheRepository.deleteById(id);
+    }
+
+    public List<Tache> getTachesByStatut(String statut) {
+        return tacheRepository.findByStatut(statut);
+    }
+    public Tache addTacheToProjet(int projetId, Tache tache) {
+        Projet projet = projetRepository.findById(projetId)
+                .orElseThrow(() -> new RuntimeException("Projet non trouvé"));
+        tache.setProjet(projet);
+        tache.setDateCreation(LocalDateTime.now());
+        return tacheRepository.save(tache);
+    }
+
+
+    public List<Tache> getTachesByPriorite(String priorite) {
+        return tacheRepository.findByPriorite(priorite);
+    }
+}
+
+1- j'ai commencer par injecter ProjetRepository et TacheRepository par @Autowired
+2- j'ai créer aussi une méthode pour retourner la tache  par projet :getTachesByProjet
+3- j'ai créer aussi une méthode pour retourner la tache  par id :getTacheById
+4- j'ai créer aussi une méthode pour retourner les taches par statut et par prioprite: getTachesByPriorite, getTachesByStatut
+5- une methode pour supprimer une tache: deleteTache
+6- une méthode pour ajouter une tache dans un projet:addTacheToProjet
+7- une méthod epour modifier une tache :updateTache (modifier le Statut, Description et Titre)
+*/
+
+***********************************Les controlleurs******************************************
++ ProjectController:
+
+package com.example.exo1.controller;
+
+import com.example.exo1.model.Projet;
+import com.example.exo1.service.ProjetService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/projets")
+public class ProjetController {
+
+    @Autowired
+    private ProjetService projetService;
+
+    @GetMapping
+    public List<Projet> getAllProjets() {
+        return projetService.getAllProjets();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Projet> getProjetById(@PathVariable int id) {
+        return projetService.getProjetById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public Projet addProjet(@RequestBody Projet projet) {
+        return projetService.addProjet(projet);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Projet> updateProjet(@PathVariable int id, @RequestBody Projet projet) {
+        return projetService.updateProjet(id, projet)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProjet(@PathVariable int id) {
+        projetService.deleteProjet(id);
+        return ResponseEntity.ok().build();
+    }
+}
+
+/* 
+1-j'ai injecter ProjetService à travers @Autowired
+2-j'ai genere différent endpoints:(dans tous les méthodes on va faire appels aux méthodes crées dans ProjetService)
+   * @GetMapping: pour afficher les projets 
+   * @GetMapping("/{id}"): afficher le projet par id 
+   * @PostMapping: pour créer un projet
+   * @PutMapping("/{id}"): pour pouvoir modifier les attributs d'un projet
+   * @DeleteMapping("/{id}"): pour pouvoir supprimer un projet à travers son id
+*/
+
+
++ TacheController:
+
+package com.example.exo1.controller;
+
+import com.example.exo1.model.Tache;
+import com.example.exo1.service.TacheService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api")
+public class TacheController {
+
+    @Autowired
+    private TacheService tacheService;
+
+    @GetMapping("/taches/{id}")
+    public ResponseEntity<Tache> getTacheById(@PathVariable int id) {
+        return tacheService.getTacheById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/projets/{projetId}/taches")
+    public ResponseEntity<?> getTachesByProjet(
+            @PathVariable long projetId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String sort) {
+
+        if (page != null && size != null) {
+            Pageable pageable = (sort != null)
+                    ? PageRequest.of(page, size, Sort.by(sort))
+                    : PageRequest.of(page, size);
+            Page<Tache> pagedTaches = tacheService.getTachesByProjetPaged(projetId, pageable);
+            return ResponseEntity.ok(pagedTaches);
+        } else {
+            List<Tache> taches = tacheService.getTachesByProjet(projetId);
+            return ResponseEntity.ok(taches);
+        }
+    }
+
+    @PutMapping("/taches/{id}")
+    public ResponseEntity<Tache> updateTache(@PathVariable int id, @RequestBody Tache tache) {
+        return tacheService.updateTache(id, tache)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/taches/{id}")
+    public ResponseEntity<Void> deleteTache(@PathVariable int id) {
+        tacheService.deleteTache(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/tasks/statut/{statut}")
+    public List<Tache> getTachesByStatut(@PathVariable String statut) {
+        return tacheService.getTachesByStatut(statut);
+    }
+
+    @GetMapping("/tasks/priorite/{priorite}")
+    public List<Tache> getTachesByPriorite(@PathVariable String priorite) {
+        return tacheService.getTachesByPriorite(priorite);
+    }
+    @PostMapping("/projets/{projetId}/taches")
+    public ResponseEntity<Tache> addTache(@PathVariable int projetId, @RequestBody Tache tache) {
+        Tache createdTache = tacheService.addTacheToProjet(projetId, tache);
+        return ResponseEntity.ok(createdTache);
+    }
+
+}
+
+/*
+1- j'ai injecter tacheService à travers     @Autowired
+2- j'ai definits des Endpoints :
+	*@GetMapping: pour afficheer une tache par son id
+        *@GetMapping("/projets/{projetId}/taches"): pour affichier la liste des tache par un projet, ici on va les affichier pa pagination, si la page et le size sont fournis sont envoyes dans la requet alors on va envoye les resultat avec pagination, meme chose pour le sort , sir le champs à ordonner est offert dans la requete alors on va envoyer les résultats avec pagination et ordonneés aussi
+        *@PutMapping: changer dans les attributs de la tache
+	*@DeleteMapping: supprimer la tache à partie de l'id fournis
+	*@GetMapping: filitrage des taches selon le status et selon la propriete
+	* @PostMapping("/projets/{projetId}/taches"): ajouter une atche à un projet
+*/
