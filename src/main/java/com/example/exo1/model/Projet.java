@@ -4,10 +4,16 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 @Data
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name="projet")
 public class Projet {
@@ -23,4 +29,15 @@ public class Projet {
     private String statut;
     @OneToMany(mappedBy = "projet")
     private List<Tache> taches;
+
+    public Projet(int id, String nom, String description, String statut, List<Tache> taches) {
+        this.id = id;
+        this.nom = nom;
+        this.description = description;
+        this.statut = statut;
+        this.taches = taches;
+        this.dateCreation = LocalDateTime.now();
+
+    }
 }
+/* */

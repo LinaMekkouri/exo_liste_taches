@@ -67,4 +67,10 @@ public class TacheController {
     public List<Tache> getTachesByPriorite(@PathVariable String priorite) {
         return tacheService.getTachesByPriorite(priorite);
     }
+    @PostMapping("/projets/{projetId}/taches")
+    public ResponseEntity<Tache> addTache(@PathVariable int projetId, @RequestBody Tache tache) {
+        Tache createdTache = tacheService.addTacheToProjet(projetId, tache);
+        return ResponseEntity.ok(createdTache);
+    }
+
 }

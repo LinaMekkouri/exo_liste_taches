@@ -5,12 +5,19 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import jdk.jfr.DataAmount;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
+
 @Table(name="tache")
 public class Tache {
     @Id
@@ -31,4 +38,16 @@ public class Tache {
     @ManyToOne
     @JoinColumn(name="projetId", nullable = false)
     private Projet projet;
+
+    public Tache(int id, String titre, String description, Statut statut, Priorite priorite, LocalDate dateEcheance, Projet projet) {
+        this.id = id;
+        this.titre = titre;
+        this.description = description;
+        this.statut = statut;
+        this.priorite = priorite;
+        this.dateEcheance = dateEcheance;
+        this.projet = projet;
+        this.dateCreation = LocalDateTime.now();
+
+    }
 }

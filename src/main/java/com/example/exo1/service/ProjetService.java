@@ -5,6 +5,7 @@ import com.example.exo1.repository.ProjetRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,14 +24,15 @@ public class ProjetService {
     }
 
     public Projet addProjet(Projet projet) {
+        projet.setDateCreation(LocalDateTime.now());
         return projetRepository.save(projet);
     }
+
 
     public Optional<Projet> updateProjet(int id, Projet projetDetails) {
         return projetRepository.findById(id).map(existingProjet -> {
             existingProjet.setNom(projetDetails.getNom());
             existingProjet.setDescription(projetDetails.getDescription());
-            existingProjet.setDateCreation(projetDetails.getDateCreation());
             existingProjet.setStatut(projetDetails.getStatut());
             return projetRepository.save(existingProjet);
         });
