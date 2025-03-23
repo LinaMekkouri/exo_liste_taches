@@ -156,18 +156,20 @@ public enum Priorite {
 
 Fichier `application.properties` :
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/nom_de_la_base
-spring.datasource.username=utilisateur
-spring.datasource.password=motdepasse
+spring.application.name=exo1
+spring.datasource.url=jdbc:postgresql://localhost:5432/exo1
+spring.datasource.username=postgres
+spring.datasource.password=##
 spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
 ```
 
 ---
 
 ## ▶️ Lancer l'application
 
-1. Lancer votre base de données MySQL
+1. Lancer votre base de données Postgres dans mon cas
 2. Configurer `application.properties`
 3. Exécuter la classe `Exo1Application.java`
 
@@ -205,17 +207,16 @@ spring.jpa.show-sql=true
 - Spring Boot
 - Spring Data JPA
 - Hibernate
-- MySQL
+- Postgres
 - Lombok
 
 ---
 
 ## 👨‍💻 Auteur
 
-Projet réalisé dans le cadre d’un exercice pédagogique ou d’un projet d’entreprise utilisant Java et Spring Boot.
-
+Projet réalisé dans le cadre d’un exercice .
 ---
 
 ## 📬 Contributions
 
-Les contributions sont les bienvenues ! Forkez ce projet et proposez vos améliorations via Pull Request.
+Les contributions sont les bienvenues !
